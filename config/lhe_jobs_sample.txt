@@ -1,0 +1,13 @@
+# Sample job manifest for LHE blocks 00010-00100 (step 10)
+# Format: job_label lhe_uri
+# Lines starting with # are ignored
+block_00010 root://eosuser.cern.ch//eos/user/x/xcheng/learn_MC/SPS-Jpsi_blocks/MC_Jpsi_block_00010.lhe
+block_00020 root://eosuser.cern.ch//eos/user/x/xcheng/learn_MC/SPS-Jpsi_blocks/MC_Jpsi_block_00020.lhe
+block_00030 root://eosuser.cern.ch//eos/user/x/xcheng/learn_MC/SPS-Jpsi_blocks/MC_Jpsi_block_00030.lhe
+block_00040 root://eosuser.cern.ch//eos/user/x/xcheng/learn_MC/SPS-Jpsi_blocks/MC_Jpsi_block_00040.lhe
+block_00050 root://eosuser.cern.ch//eos/user/x/xcheng/learn_MC/SPS-Jpsi_blocks/MC_Jpsi_block_00050.lhe
+block_00060 root://eosuser.cern.ch//eos/user/x/xcheng/learn_MC/SPS-Jpsi_blocks/MC_Jpsi_block_00060.lhe
+block_00070 root://eosuser.cern.ch//eos/user/x/xcheng/learn_MC/SPS-Jpsi_blocks/MC_Jpsi_block_00070.lhe
+block_00080 root://eosuser.cern.ch//eos/user/x/xcheng/learn_MC/SPS-Jpsi_blocks/MC_Jpsi_block_00080.lhe
+block_00090 root://eosuser.cern.ch//eos/user/x/xcheng/learn_MC/SPS-Jpsi_blocks/MC_Jpsi_block_00090.lhe
+block_00100 root://eosuser.cern.ch//eos/user/x/xcheng/learn_MC/SPS-Jpsi_blocks/MC_Jpsi_block_00100.lhe

@@ -1,0 +1,28 @@
+# HTCondor submission file for Jpsi DPS production chain
+# Submit with: condor_submit submit.sub
+
+universe                = vanilla
+executable              = $(SCRIPTS_DIR)/job_wrapper.sh
+arguments               = $(job_label) $(lhe_uri)
+output                  = $(CONDOR_LOG_DIR)/$(job_label).out
+error                   = $(CONDOR_LOG_DIR)/$(job_label).err
+log                     = $(CONDOR_LOG_DIR)/condor.log
+
+# Environment variables passed to the job
+environment             = "CMSSW_BASE_DIR=$(CMSSW_BASE_DIR) EOS_OUTPUT_BASE=$(EOS_OUTPUT_BASE) LOG_OUTPUT_BASE=$(LOG_OUTPUT_BASE) SCRAM_ARCH=$(SCRAM_ARCH) COPY_INTERMEDIATE=$(COPY_INTERMEDIATE) JOB_LOG_LEVEL=$(JOB_LOG_LEVEL)"
+
+# Requirements
++JobFlavour             = "tomorrow"
+request_cpus            = 8
+request_memory          = 16000
+request_disk            = 30000000
+
+# Transfer settings (use shared filesystem)
+should_transfer_files   = NO
+getenv                  = False
+
+# Use CERN batch system
++AccountingGroup        = "group_u_CMS.u_zh_xcxc"
+
+# Queue jobs from manifest file
+queue job_label, lhe_uri from $(JOB_MANIFEST)

@@ -1,0 +1,2 @@
+block_00010 root://eosuser.cern.ch//eos/user/x/xcheng/learn_MC/SPS-Jpsi_blocks/MC_Jpsi_block_00010.lhe
+block_00020 root://eosuser.cern.ch//eos/user/x/xcheng/learn_MC/SPS-Jpsi_blocks/MC_Jpsi_block_00020.lhe

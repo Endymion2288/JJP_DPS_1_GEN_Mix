@@ -11,11 +11,14 @@ log                     = $(CONDOR_LOG_DIR)/condor.log
 # Environment variables passed to the job
 environment             = "CMSSW_BASE_DIR=$(CMSSW_BASE_DIR) EOS_OUTPUT_BASE=$(EOS_OUTPUT_BASE) LOG_OUTPUT_BASE=$(LOG_OUTPUT_BASE) SCRAM_ARCH=$(SCRAM_ARCH) COPY_INTERMEDIATE=$(COPY_INTERMEDIATE) JOB_LOG_LEVEL=$(JOB_LOG_LEVEL)"
 
-# Requirements
+# Requirements - request el8 Singularity container for el8 CMSSW
 +JobFlavour             = "tomorrow"
 request_cpus            = 8
 request_memory          = 16000
 request_disk            = 30000000
+
+# Request Singularity container for el8 compatibility on el9 workers
++SingularityImage       = "/cvmfs/unpacked.cern.ch/registry.hub.docker.com/cmssw/el8:x86_64"
 
 # Transfer settings (use shared filesystem)
 should_transfer_files   = NO

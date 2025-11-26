@@ -10,7 +10,8 @@ BASE_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 # Adjust these paths as needed
 
 # CMSSW base directory (on shared filesystem)
-CMSSW_BASE_DIR="${CMSSW_BASE_DIR:-/afs/cern.ch/user/x/xcheng/cernbox/learn_MC/project_gg_JJg_JJP/pythia_run/CMSSW_12_4_14_patch3}"
+# Note: Use EOS path since AFS may not be accessible from all worker nodes
+CMSSW_BASE_DIR="${CMSSW_BASE_DIR:-/eos/user/x/xcheng/learn_MC/project_gg_JJg_JJP/pythia_run/CMSSW_12_4_14_patch3}"
 
 # EOS output base for MINIAOD files
 EOS_OUTPUT_BASE="${EOS_OUTPUT_BASE:-root://eosuser.cern.ch//eos/user/x/xcheng/learn_MC/JJP_DPS_MINIAOD}"
@@ -24,8 +25,8 @@ CONDOR_LOG_DIR="${CONDOR_LOG_DIR:-/afs/cern.ch/user/x/xcheng/condor/JJP_DPS_1_GE
 # Job manifest file
 JOB_MANIFEST="${JOB_MANIFEST:-${BASE_DIR}/config/lhe_jobs.txt}"
 
-# SCRAM architecture
-SCRAM_ARCH="${SCRAM_ARCH:-el9_amd64_gcc11}"
+# SCRAM architecture - CMSSW_12_4_14_patch3 requires el8_amd64_gcc10
+SCRAM_ARCH="${SCRAM_ARCH:-el8_amd64_gcc10}"
 
 # Whether to copy intermediate files (0 or 1)
 COPY_INTERMEDIATE="${COPY_INTERMEDIATE:-0}"

@@ -1,0 +1,4 @@
+output/
+*.root
+*.lhe
+*.hepmc

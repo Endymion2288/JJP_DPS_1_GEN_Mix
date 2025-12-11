@@ -2,7 +2,7 @@
 
 PYTHIA8 = /eos/user/x/xcheng/pythia8316
 HEPMC3 = /eos/user/x/xcheng/HepMC3/HepMC3-3.3.1/build
-HEPMC2 = /afs/cern.ch/user/x/xcheng/cernbox/HepMC/install
+HEPMC2 = /eos/user/x/xcheng/HepMC/install
 
 CXX = g++
 CXXFLAGS = -std=c++11 -O2 -pedantic -W -Wall -Wshadow -fPIC

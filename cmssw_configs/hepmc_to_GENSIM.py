@@ -4,6 +4,20 @@
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
 # with command line options: --mc --no_exec --python_filename JJY1S_Y1S-Octet_SPS_6Mu_13p6TeV_TuneCP5_pythia8_Run3Summer22_SIM.py --eventcontent RAWSIM --step GEN,SIM --datatier GEN-SIM --conditions 124X_mcRun3_2022_realistic_v12 --beamspot Realistic25ns13p6TeVEarly2022Collision --era Run3 --geometry DB:Extended -n -1 --customise Configuration/DataProcessing/Utils.addMonitoring --nThreads 8 --nStreams 8 --filein file:test_Jpsi1Jpsi1Y8.dat --fileout file:JJY1S_Y1S-Octet_SPS_6Mu_13p6TeV_TuneCP5_pythia8_Run3Summer22_GENSIM.root
 import FWCore.ParameterSet.Config as cms
+from FWCore.ParameterSet.VarParsing import VarParsing
+
+options = VarParsing ('analysis')
+options.register('inputFiles', 
+                 ['file:/eos/user/x/xcheng/learn_MC/loopmix_pythia/CMSSW_12_4_14_patch3/src/JJP_DPS_1_GEN2MINIAOD/output/test_mixed.hepmc'],
+                 VarParsing.multiplicity.list, 
+                 VarParsing.varType.string, 
+                 "Input files")
+options.register('outputFile', 
+                 'file:/eos/user/x/xcheng/learn_MC/loopmix_pythia/CMSSW_12_4_14_patch3/src/JJP_DPS_1_GEN2MINIAOD/output/test_mixed_GENSIM.root',
+                 VarParsing.multiplicity.singleton, 
+                 VarParsing.varType.string, 
+                 "Output file")
+options.parseArguments()
 
 from Configuration.Eras.Era_Run3_cff import Run3
 
@@ -31,7 +45,7 @@ process.maxEvents = cms.untracked.PSet(
 
 # Input source
 process.source = cms.Source("MCFileSource",
-    fileNames = cms.untracked.vstring('file:/eos/user/x/xcheng/learn_MC/loopmix_pythia/CMSSW_14_0_18/src/JJP_DPS_1_GENMix/output/test_mixed.hepmc'),
+    fileNames = cms.untracked.vstring(options.inputFiles),
     firstLuminosityBlockForEachRun = cms.untracked.VLuminosityBlockID([]),
     # fileNames = cms.untracked.vstring('file:/tmp/'+os.environ['USER']+'/hepmc10K.dat'),
 )
@@ -84,7 +98,7 @@ process.RAWSIMoutput = cms.OutputModule("PoolOutputModule",
         filterName = cms.untracked.string('')
     ),
     eventAutoFlushCompressedSize = cms.untracked.int32(20971520),
-    fileName = cms.untracked.string('file:/eos/user/x/xcheng/learn_MC/loopmix_pythia/CMSSW_12_4_14_patch3/src/JJP_DPS_1_GEN2MINIAOD/output/test_mixed_GENSIM.root'),
+    fileName = cms.untracked.string(options.outputFile),
     outputCommands = process.RAWSIMEventContent.outputCommands,
     splitLevel = cms.untracked.int32(0)
 )

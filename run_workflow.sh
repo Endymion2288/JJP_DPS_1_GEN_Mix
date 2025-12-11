@@ -89,9 +89,9 @@ run_merge() {
     cd "${SCRIPT_DIR}/pythia_shower"
     
     # 编译event_mixer（如果需要）
-    if [ ! -f "event_mixer" ]; then
-        echo "Compiling event_mixer..."
-        make event_mixer
+    if [ ! -f "event_mixer_hepmc2" ]; then
+        echo "Compiling event_mixer_hepmc2..."
+        make event_mixer_hepmc2
     fi
     
     # 运行合并
@@ -99,9 +99,9 @@ run_merge() {
     if [ "$nevents" != "-1" ]; then
         args="$args $nevents"
     fi
-    args="$args --hepmc2"
+    # args="$args --hepmc2"
     
-    ./event_mixer $args
+    ./event_mixer_hepmc2 $args
     
     echo -e "${GREEN}Merge completed: $output${NC}"
 }
@@ -132,7 +132,7 @@ run_hepmc2gen() {
 
     setup_cmssw
 
-    cmsRun "${SCRIPT_DIR}/cmssw_configs/hepmc2gen_cfg.py" \
+    cmsRun "${SCRIPT_DIR}/cmssw_configs/hepmc_to_GENSIM.py" \
         inputFiles="file:${input}" \
         outputFile="file:${output}" \
         maxEvents=${nevents}

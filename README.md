@@ -14,7 +14,7 @@
 ```
 LHE文件 (Helac-Onia: gg→J/ψ+g)
     ↓
-[Pythia8 Parton Shower] ← ISR/FSR/MPI
+[Pythia8 Parton Shower] ← 两种模式：正常和phi shower
     ↓
 Parton Event (暂不强子化)
     ↓
@@ -22,9 +22,11 @@ Parton Event (暂不强子化)
     ↓
 HepMC文件 (带pT>3的φ介子)
     ↓
+[1:1混合产生hepmc] ← event_mixer_hepmc2
+    ↓
 [CMSSW处理] ← CMSSW_12_4_14_patch3
     ↓
-GEN-SIM ROOT文件
+MINIAOD ROOT文件
 ```
 
 **关键技术：Hadron Level Standalone模式**
@@ -75,8 +77,7 @@ mkdir -p output
 - `Makefile` - 编译脚本
 
 **cmssw_configs/**
-- `hepmc_to_gen_cfg.py` - 普通CMSSW配置
-- `hepmc_to_gen_phi_cfg.py` - 带φ filter的CMSSW配置
+- `hepmc_to_GENSIM.py` - CMSSW配置 (HepMC -> GEN-SIM)
 
 **根目录：**
 - `run_workflow.sh` - 自动化流程脚本
@@ -218,36 +219,14 @@ echo $CMSSW_VERSION
 # 应该输出: CMSSW_12_4_14_patch3
 ```
 
-#### 第四步：修改CMSSW配置文件
+#### 第四步：CMSSW配置文件
 
-根据您的需求选择配置文件并修改：
-
-**对于普通workflow：**
-```bash
-cd cmssw_configs
-cp hepmc_to_gen_cfg.py my_gen_cfg.py
-vim my_gen_cfg.py
-```
-
-**对于φ workflow：**
-```bash
-cp hepmc_to_gen_phi_cfg.py my_gen_phi_cfg.py
-vim my_gen_phi_cfg.py
-```
-
-修改输入输出文件路径：
-```python
-# 修改输入HepMC文件
-fileNames = cms.untracked.vstring('file:/path/to/output_normal.hepmc')
-
-# 修改输出ROOT文件
-fileName = cms.untracked.string('file:/path/to/output_GEN.root')
-```
+`cmssw_configs/hepmc_to_GENSIM.py` 已配置为接受命令行参数，可直接通过 `run_workflow.sh` 调用。
 
 #### 第五步：运行CMSSW
 
 ```bash
-cmsRun my_gen_cfg.py
+cmsRun cmssw_configs/hepmc_to_GENSIM.py inputFiles=file:input.hepmc outputFile=file:output.root
 ```
 
 或者使用批处理：

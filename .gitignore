@@ -2,3 +2,9 @@ output/
 *.root
 *.lhe
 *.hepmc
+pythia_shower/event_mixer_hepmc2
+pythia_shower/shower_normal
+pythia_shower/shower_phi
+condor/logs/
+condor/test_output/
+*.txt

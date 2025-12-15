@@ -6,7 +6,8 @@
 import FWCore.ParameterSet.Config as cms
 from FWCore.ParameterSet.VarParsing import VarParsing
 
-options = VarParsing ('analysis')
+options = VarParsing()
+# 使用空构造函数以避免预定义变量冲突
 options.register('inputFiles', 
                  ['file:/eos/user/x/xcheng/learn_MC/loopmix_pythia/CMSSW_12_4_14_patch3/src/JJP_DPS_1_GEN2MINIAOD/output/test_mixed.hepmc'],
                  VarParsing.multiplicity.list, 
@@ -17,6 +18,11 @@ options.register('outputFile',
                  VarParsing.multiplicity.singleton, 
                  VarParsing.varType.string, 
                  "Output file")
+options.register('maxEvents',
+                 -1,
+                 VarParsing.multiplicity.singleton,
+                 VarParsing.varType.int,
+                 "Maximum number of events to process")
 options.parseArguments()
 
 from Configuration.Eras.Era_Run3_cff import Run3
@@ -39,7 +45,7 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(-1),
+    input = cms.untracked.int32(options.maxEvents),
     output = cms.optional.untracked.allowed(cms.int32,cms.PSet)
 )
 

@@ -1,6 +1,10 @@
 #!/bin/bash
 # generate_job_list.sh - 生成HTCondor作业列表
-# 根据LHE文件目录生成对应的block编号列表
+# 生成成对的LHE块编号，确保normal和phi shower使用不同的LHE文件
+#
+# 策略: 将LHE文件分成两组（奇数和偶数），
+#       奇数组用于normal shower，偶数组用于phi shower
+#       这样可以最大化利用所有LHE文件
 #
 # 用法: ./generate_job_list.sh [output_file]
 
@@ -9,29 +13,51 @@ OUTPUT_FILE="${1:-job_list.txt}"
 
 echo "Generating job list from: ${LHE_DIR}"
 echo "Output file: ${OUTPUT_FILE}"
+echo ""
+echo "Strategy: Pair LHE files for normal and phi showers"
+echo "          (using different files to avoid correlation)"
+
+# 收集所有block编号到数组
+blocks=()
+for lhe_file in "${LHE_DIR}"/MC_Jpsi_block_*.lhe; do
+    if [ -f "$lhe_file" ]; then
+        basename=$(basename "$lhe_file")
+        block_num=$(echo "$basename" | sed 's/MC_Jpsi_block_\([0-9]*\)\.lhe/\1/')
+        blocks+=("$block_num")
+    fi
+done
+
+# 排序
+IFS=$'\n' sorted_blocks=($(sort <<<"${blocks[*]}")); unset IFS
+
+total_blocks=${#sorted_blocks[@]}
+echo "Total LHE files found: ${total_blocks}"
 
 # 清空或创建输出文件
 > "${OUTPUT_FILE}"
 
-# 遍历所有LHE文件，提取block编号
+# 将blocks分成两组配对
+# 方法: 前半部分用于normal，后半部分用于phi
+half=$((total_blocks / 2))
+
 count=0
-for lhe_file in "${LHE_DIR}"/MC_Jpsi_block_*.lhe; do
-    if [ -f "$lhe_file" ]; then
-        # 提取block编号 (例如: 00010, 00020, ...)
-        basename=$(basename "$lhe_file")
-        block_num=$(echo "$basename" | sed 's/MC_Jpsi_block_\([0-9]*\)\.lhe/\1/')
-        echo "$block_num" >> "${OUTPUT_FILE}"
-        ((count++))
-    fi
+for ((i=0; i<half; i++)); do
+    normal_block="${sorted_blocks[$i]}"
+    phi_block="${sorted_blocks[$((i + half))]}"
+    echo "${normal_block} ${phi_block}" >> "${OUTPUT_FILE}"
+    ((count++))
 done
 
-echo "Generated ${count} jobs"
+echo ""
+echo "Generated ${count} job pairs"
 echo "Job list saved to: ${OUTPUT_FILE}"
+echo ""
+echo "Format: <lhe_block_normal> <lhe_block_phi>"
 
 # 显示前几个和后几个
 echo ""
-echo "First 5 blocks:"
+echo "First 5 pairs:"
 head -5 "${OUTPUT_FILE}"
 echo "..."
-echo "Last 5 blocks:"
+echo "Last 5 pairs:"
 tail -5 "${OUTPUT_FILE}"

@@ -24,16 +24,46 @@ echo "Creating directories..."
 # Condor日志目录
 mkdir -p "${SCRIPT_DIR}/logs"
 
-# EOS输出目录
+# EOS输出目录 - 只保存最终MINIAOD
 OUTPUT_BASE="/eos/user/x/xcheng/learn_MC/JJP_DPS_MC_output"
-mkdir -p "${OUTPUT_BASE}/hepmc"
-mkdir -p "${OUTPUT_BASE}/GEN"
-mkdir -p "${OUTPUT_BASE}/GENSIM"
-mkdir -p "${OUTPUT_BASE}/RAW"
-mkdir -p "${OUTPUT_BASE}/AOD"
 mkdir -p "${OUTPUT_BASE}/MINIAOD"
 
 echo "Output directories created at: ${OUTPUT_BASE}"
+
+# ============== 初始化VOMS代理 ==============
+echo ""
+echo "Setting up VOMS proxy for CMS grid access..."
+echo "This is required for accessing pileup files from remote XRootD servers."
+echo ""
+
+# 检查是否已有有效的代理
+if voms-proxy-info --exists --valid 24:00 2>/dev/null; then
+    echo "Valid VOMS proxy found:"
+    voms-proxy-info
+else
+    echo "No valid proxy found or proxy expires in less than 24 hours."
+    echo "Initializing new VOMS proxy..."
+    voms-proxy-init -voms cms -valid 192:00
+    
+    if [ $? -ne 0 ]; then
+        echo "WARNING: voms-proxy-init failed!"
+        echo "You need a valid CMS VOMS proxy to access pileup files."
+        echo "Please run: voms-proxy-init -voms cms -valid 192:00"
+    else
+        echo "VOMS proxy created successfully:"
+        voms-proxy-info
+    fi
+fi
+
+export X509_USER_PROXY=$(voms-proxy-info -path)
+
+# 复制proxy到AFS共享目录（HTCondor提交节点需要访问）
+AFS_PROXY_PATH="/afs/cern.ch/user/x/xcheng/.globus/x509_proxy"
+mkdir -p "$(dirname "${AFS_PROXY_PATH}")"
+cp "${X509_USER_PROXY}" "${AFS_PROXY_PATH}"
+chmod 600 "${AFS_PROXY_PATH}"
+echo "Proxy copied to AFS: ${AFS_PROXY_PATH}"
+echo "(This is needed for HTCondor job submission)"
 
 # ============== 设置CMSSW环境 ==============
 echo ""
@@ -83,15 +113,18 @@ echo "Setup Complete!"
 echo "=========================================="
 echo ""
 echo "Next steps:"
-echo "  1. Test a single job locally:"
-echo "     ./test_local.sh 00010"
+echo "  1. Ensure VOMS proxy is valid (8 days):"
+echo "     voms-proxy-info"
 echo ""
-echo "  2. Submit all jobs to HTCondor:"
+echo "  2. Test a single job locally:"
+echo "     ./test_local.sh 00010 03270 20"
+echo ""
+echo "  3. Submit all jobs to HTCondor:"
 echo "     condor_submit condor_submit.sub"
 echo ""
-echo "  3. Check job status:"
+echo "  4. Check job status:"
 echo "     condor_q"
 echo ""
-echo "  4. Check output files:"
+echo "  5. Check output files:"
 echo "     ls ${OUTPUT_BASE}/MINIAOD/"
 echo "=========================================="

@@ -198,24 +198,21 @@ int main(int argc, char* argv[]) {
         
         if (foundPhi) {
             successWithPhi++;
+            
+            // 统计粒子
+            int nJpsi, nPhi, nMuon;
+            countParticles(pythia.event, nJpsi, nPhi, nMuon);
+            totalJpsi += nJpsi;
+            totalPhi += nPhi;
+            totalMuon += nMuon;
+            
+            // 只有找到满足条件的phi时才写入HepMC文件
+            toHepMC.writeNextEvent(pythia);
         } else {
             failedToFindPhi++;
-            // 如果达到最大重试次数仍未找到φ，使用最后一次的结果
-            // 恢复并做最后一次 hadronization
-            pythia.event = savedEvent;
-            pythia.partonSystems = savedPartonSystems;
-            pythia.forceHadronLevel();
+            // 如果达到最大重试次数仍未找到满足pT条件的phi，跳过此事例
+            // 不写入输出文件，以确保输出中的每个事例都有pT>minPhiPt的phi
         }
-        
-        // 统计粒子
-        int nJpsi, nPhi, nMuon;
-        countParticles(pythia.event, nJpsi, nPhi, nMuon);
-        totalJpsi += nJpsi;
-        totalPhi += nPhi;
-        totalMuon += nMuon;
-        
-        // 写出事件到 HepMC
-        toHepMC.writeNextEvent(pythia);
         
         ++iEvent;
         if (iEvent % 100 == 0) {
@@ -233,20 +230,18 @@ int main(int argc, char* argv[]) {
     cout << "\n======================================================" << endl;
     cout << "Processing Summary:" << endl;
     cout << "------------------------------------------------------" << endl;
-    cout << "Total events processed:    " << iEvent << endl;
-    cout << "Events with phi (pT>" << minPhiPt << "): " << successWithPhi 
+    cout << "Total LHE events processed:  " << iEvent << endl;
+    cout << "Events written (pT>" << minPhiPt << " phi): " << successWithPhi 
          << " (" << 100.0*successWithPhi/max(1,iEvent) << "%)" << endl;
-    cout << "Events without phi:        " << failedToFindPhi << endl;
-    cout << "Total hadronization tries: " << totalRetries << endl;
-    cout << "Average retries per event: " << (double)totalRetries/max(1,iEvent) << endl;
+    cout << "Events skipped (no phi):     " << failedToFindPhi << endl;
+    cout << "Total hadronization tries:   " << totalRetries << endl;
+    cout << "Average retries per event:   " << (double)totalRetries/max(1,iEvent) << endl;
     cout << "------------------------------------------------------" << endl;
-    cout << "Particle counts (status<0 or isFinal):" << endl;
+    cout << "Particle counts (in written events):" << endl;
     cout << "  Total J/psi: " << totalJpsi << endl;
     cout << "  Total phi:   " << totalPhi << endl;
     cout << "  Total muons: " << totalMuon << endl;
     cout << "------------------------------------------------------" << endl;
-    cout << "Output file: " << outputFile << endl;
-    cout << "======================================================" << endl;
-    
-    return 0;
+    cout << "Output events: " << successWithPhi << endl;
+    cout << "Output file:   " << outputFile << endl;
 }

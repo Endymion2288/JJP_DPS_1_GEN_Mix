@@ -2,28 +2,37 @@
 # test_local.sh - 本地测试单个作业
 # 用于在提交到集群前验证完整工作流程
 #
-# 用法: ./test_local.sh <lhe_block> [nevents]
-# 例如: ./test_local.sh 00010 10
+# 注意: 测试时使用两个不同的LHE文件，与正式作业一致
+#
+# 用法: ./test_local.sh <lhe_block_normal> <lhe_block_phi> [nevents]
+# 例如: ./test_local.sh 00010 00020 10
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LHE_BLOCK="${1:-00010}"
-NEVENTS="${2:--1}"
+LHE_BLOCK_NORMAL="${1:-00010}"
+LHE_BLOCK_PHI="${2:-00020}"
+NEVENTS="${3:--1}"
 
 echo "=========================================="
 echo "Local Test Run"
 echo "=========================================="
-echo "LHE Block: ${LHE_BLOCK}"
+echo "LHE Block (Normal): ${LHE_BLOCK_NORMAL}"
+echo "LHE Block (Phi):    ${LHE_BLOCK_PHI}"
 echo "Events: ${NEVENTS}"
 echo ""
 
 # 检查LHE文件是否存在
 LHE_DIR="/eos/user/x/xcheng/learn_MC/SPS-Jpsi_blocks"
-LHE_FILE="${LHE_DIR}/MC_Jpsi_block_${LHE_BLOCK}.lhe"
+LHE_FILE_NORMAL="${LHE_DIR}/MC_Jpsi_block_${LHE_BLOCK_NORMAL}.lhe"
+LHE_FILE_PHI="${LHE_DIR}/MC_Jpsi_block_${LHE_BLOCK_PHI}.lhe"
 
-if [ ! -f "${LHE_FILE}" ]; then
-    echo "ERROR: LHE file not found: ${LHE_FILE}"
+if [ ! -f "${LHE_FILE_NORMAL}" ]; then
+    echo "ERROR: LHE file (normal) not found: ${LHE_FILE_NORMAL}"
+    exit 1
+fi
+if [ ! -f "${LHE_FILE_PHI}" ]; then
+    echo "ERROR: LHE file (phi) not found: ${LHE_FILE_PHI}"
     exit 1
 fi
 
@@ -63,21 +72,23 @@ source /cvmfs/cms.cern.ch/cmsset_default.sh
 eval $(scramv1 runtime -sh)
 cd "${TEST_OUTPUT}"
 
-BASENAME="test_block_${LHE_BLOCK}"
+BASENAME="test_N${LHE_BLOCK_NORMAL}_P${LHE_BLOCK_PHI}"
 HEPMC_NORMAL="${TEST_OUTPUT}/${BASENAME}_normal.hepmc"
 HEPMC_PHI="${TEST_OUTPUT}/${BASENAME}_phi.hepmc"
 HEPMC_MIXED="${TEST_OUTPUT}/${BASENAME}_mixed.hepmc"
 
-# Step 1: Normal Shower
+# Step 1: Normal Shower (使用第一个LHE文件)
 echo "Step 1: Normal Shower..."
-"${WORK_BASE}/pythia_shower/shower_normal" "${LHE_FILE}" "${HEPMC_NORMAL}" ${NEVENTS}
+echo "  Input: ${LHE_FILE_NORMAL}"
+"${WORK_BASE}/pythia_shower/shower_normal" "${LHE_FILE_NORMAL}" "${HEPMC_NORMAL}" ${NEVENTS}
 echo "  Output: ${HEPMC_NORMAL}"
 ls -lh "${HEPMC_NORMAL}"
 
-# Step 2: Phi-enriched Shower
+# Step 2: Phi-enriched Shower (使用第二个LHE文件)
 echo ""
 echo "Step 2: Phi-enriched Shower..."
-"${WORK_BASE}/pythia_shower/shower_phi" "${LHE_FILE}" "${HEPMC_PHI}" ${NEVENTS} 0.0 100
+echo "  Input: ${LHE_FILE_PHI}"
+"${WORK_BASE}/pythia_shower/shower_phi" "${LHE_FILE_PHI}" "${HEPMC_PHI}" ${NEVENTS} 3.0 1000
 echo "  Output: ${HEPMC_PHI}"
 ls -lh "${HEPMC_PHI}"
 

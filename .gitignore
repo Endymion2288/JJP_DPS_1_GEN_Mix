@@ -8,3 +8,5 @@ pythia_shower/shower_phi
 condor/logs/
 condor/test_output/
 *.txt
+xcheng.cc
+*_cfg.py

@@ -9,7 +9,9 @@
 
 # ============== 可执行文件和参数 ==============
 executable = condor_job.sh
-arguments  = $(Process) $(lhe_block)
+# 参数: job_id, lhe_block_normal, lhe_block_phi
+# Normal和Phi shower使用不同的LHE文件避免事例相关性
+arguments  = $(Process) $(lhe_block_normal) $(lhe_block_phi)
 
 # ============== 资源需求 ==============
 # 请求CPU、内存和磁盘空间
@@ -30,7 +32,7 @@ log    = logs/condor_$(Cluster).log
 getenv = True
 
 # 设置运行环境
-+JobFlavour = "longlunch"
++JobFlavour = "workday"
 
 # 使用SL7或EL8容器 (CMSSW需要)
 +SingularityImage = "/cvmfs/unpacked.cern.ch/registry.hub.docker.com/cmssw/el8:x86_64"
@@ -38,14 +40,24 @@ getenv = True
 # 需要访问EOS和CVMFS
 requirements = (TARGET.OpSysAndVer =?= "AlmaLinux9" || TARGET.OpSysAndVer =?= "CentOS7" || TARGET.OpSysAndVer =?= "RockyLinux8")
 
+# ============== X509代理设置 ==============
+# 必须设置X509代理才能访问远程pileup文件
+# Proxy文件必须在AFS上以便从提交节点访问
+use_x509userproxy = True
+x509userproxy = /afs/cern.ch/user/x/xcheng/.globus/x509_proxy
+
 # ============== 文件传输 ==============
-# 不传输文件，使用共享文件系统
-should_transfer_files = NO
+# 禁止HTCondor传输任何文件，使用xrdcp直接写入EOS
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT_OR_EVICT
+transfer_output_files = ""
+transfer_input_files = ""
 
 # ============== 通知设置 ==============
 notification = Error
 # notify_user = your.email@cern.ch
 
 # ============== 作业队列 ==============
-# 从作业列表文件读取LHE块编号
-queue lhe_block from job_list.txt
+# 从作业列表文件读取LHE块编号对 (normal, phi)
+# job_list.txt格式: lhe_block_normal lhe_block_phi
+queue lhe_block_normal,lhe_block_phi from job_list.txt

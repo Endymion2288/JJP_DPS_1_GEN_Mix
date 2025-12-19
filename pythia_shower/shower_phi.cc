@@ -32,6 +32,51 @@ bool hasPhiMeson(Event& event, double minPt = 0.0) {
     return false;
 }
 
+// 检查J/psi衰变产生的muon是否满足动力学条件
+// 要求两个muon都满足 pT > minPt 且 |eta| < maxEta
+bool hasValidJpsiMuons(Event& event, double minPt = 2.5, double maxEta = 2.4) {
+    // 找到所有J/psi并检查其衰变产物
+    for (int i = 0; i < event.size(); ++i) {
+        if (abs(event[i].id()) != 443) continue; // 只看J/psi
+        
+        int status = event[i].status();
+        if (status >= 0 && !event[i].isFinal()) continue; // 跳过未衰变的
+        
+        // 获取J/psi的衰变产物
+        int d1 = event[i].daughter1();
+        int d2 = event[i].daughter2();
+        
+        if (d1 <= 0 || d2 <= 0) continue;
+        
+        // 检查是否衰变到mu+ mu-
+        bool foundMuPlus = false, foundMuMinus = false;
+        bool muPlusValid = false, muMinusValid = false;
+        
+        for (int j = d1; j <= d2; ++j) {
+            int pid = event[j].id();
+            if (pid == 13) { // mu-
+                foundMuMinus = true;
+                if (event[j].pT() > minPt && abs(event[j].eta()) < maxEta) {
+                    muMinusValid = true;
+                }
+            } else if (pid == -13) { // mu+
+                foundMuPlus = true;
+                if (event[j].pT() > minPt && abs(event[j].eta()) < maxEta) {
+                    muPlusValid = true;
+                }
+            }
+        }
+        
+        // 如果找到了J/psi -> mu+ mu-衰变，检查两个muon是否都满足条件
+        if (foundMuPlus && foundMuMinus) {
+            if (muPlusValid && muMinusValid) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 // 统计事件中的关键粒子
 void countParticles(Event& event, int& nJpsi, int& nPhi, int& nMuon) {
     nJpsi = 0;
@@ -55,15 +100,17 @@ int main(int argc, char* argv[]) {
     
     if (argc < 3) {
         cerr << "\n====== Phi-Enriched Shower Processing ======" << endl;
-        cerr << "Usage: " << argv[0] << " input.lhe output.hepmc [nEvents] [minPhiPt] [maxRetry]" << endl;
+        cerr << "Usage: " << argv[0] << " input.lhe output.hepmc [nEvents] [minPhiPt] [minMuonPt] [maxMuonEta] [maxRetry]" << endl;
         cerr << "\nArguments:" << endl;
         cerr << "  input.lhe   : Input LHE file from HELAC-Onia" << endl;
         cerr << "  output.hepmc: Output HepMC file" << endl;
         cerr << "  nEvents     : Number of events to process (default: -1, all)" << endl;
         cerr << "  minPhiPt    : Minimum phi pT in GeV (default: 0)" << endl;
+        cerr << "  minMuonPt   : Minimum muon pT in GeV (default: 2.5)" << endl;
+        cerr << "  maxMuonEta  : Maximum muon |eta| (default: 2.4)" << endl;
         cerr << "  maxRetry    : Maximum hadronization retries (default: 100)" << endl;
         cerr << "\nExample:" << endl;
-        cerr << "  ./shower_phi jpsi_jpsi.lhe phi_enriched.hepmc 1000 3.0 100" << endl;
+        cerr << "  ./shower_phi jpsi_jpsi.lhe phi_enriched.hepmc 1000 3.0 2.5 2.4 100" << endl;
         return 1;
     }
     
@@ -71,13 +118,17 @@ int main(int argc, char* argv[]) {
     string outputFile = argv[2];
     int nEvents = (argc > 3) ? atoi(argv[3]) : -1;
     double minPhiPt = (argc > 4) ? atof(argv[4]) : 0.0;
-    int maxRetry = (argc > 5) ? atoi(argv[5]) : 100;
+    double minMuonPt = (argc > 5) ? atof(argv[5]) : 2.5;
+    double maxMuonEta = (argc > 6) ? atof(argv[6]) : 2.4;
+    int maxRetry = (argc > 7) ? atoi(argv[7]) : 1000;
     
     cout << "\n====== Phi-Enriched Shower Processing ======" << endl;
     cout << "Input LHE:    " << inputFile << endl;
     cout << "Output HepMC: " << outputFile << endl;
     cout << "Events:       " << (nEvents > 0 ? to_string(nEvents) : "all") << endl;
     cout << "Min phi pT:   " << minPhiPt << " GeV" << endl;
+    cout << "Min muon pT:  " << minMuonPt << " GeV" << endl;
+    cout << "Max muon eta: " << maxMuonEta << endl;
     cout << "Max retries:  " << maxRetry << endl;
     cout << "=============================================\n" << endl;
     
@@ -173,8 +224,10 @@ int main(int argc, char* argv[]) {
         Event savedEvent = pythia.event;
         PartonSystems savedPartonSystems = pythia.partonSystems;
         
-        // 尝试多次 hadronization 直到找到含φ的事例
-        bool foundPhi = false;
+        // 尝试多次 hadronization 直到找到满足所有条件的事例
+        // 条件1: 有满足pT条件的phi介子
+        // 条件2: J/psi衰变的两个muon满足pT和eta条件
+        bool foundValid = false;
         int nRetry = 0;
         
         for (nRetry = 0; nRetry < maxRetry; ++nRetry) {
@@ -188,15 +241,19 @@ int main(int argc, char* argv[]) {
             }
             
             // 检查是否有满足条件的φ介子
-            if (hasPhiMeson(pythia.event, minPhiPt)) {
-                foundPhi = true;
+            bool hasPhi = hasPhiMeson(pythia.event, minPhiPt);
+            // 检查J/psi衰变的muon是否满足动力学条件
+            bool hasMuons = hasValidJpsiMuons(pythia.event, minMuonPt, maxMuonEta);
+            
+            if (hasPhi && hasMuons) {
+                foundValid = true;
                 break;
             }
         }
         
         totalRetries += nRetry + 1;
         
-        if (foundPhi) {
+        if (foundValid) {
             successWithPhi++;
             
             // 统计粒子
@@ -210,8 +267,10 @@ int main(int argc, char* argv[]) {
             toHepMC.writeNextEvent(pythia);
         } else {
             failedToFindPhi++;
-            // 如果达到最大重试次数仍未找到满足pT条件的phi，跳过此事例
-            // 不写入输出文件，以确保输出中的每个事例都有pT>minPhiPt的phi
+            // 如果达到最大重试次数仍未找到满足条件的事例，跳过
+            // 不写入输出文件，确保输出中的每个事例都有:
+            // 1. pT > minPhiPt 的 phi
+            // 2. 两个muon满足 pT > minMuonPt 且 |eta| < maxMuonEta
         }
         
         ++iEvent;
@@ -230,10 +289,14 @@ int main(int argc, char* argv[]) {
     cout << "\n======================================================" << endl;
     cout << "Processing Summary:" << endl;
     cout << "------------------------------------------------------" << endl;
+    cout << "Selection criteria:" << endl;
+    cout << "  Phi pT > " << minPhiPt << " GeV" << endl;
+    cout << "  Muon pT > " << minMuonPt << " GeV, |eta| < " << maxMuonEta << endl;
+    cout << "------------------------------------------------------" << endl;
     cout << "Total LHE events processed:  " << iEvent << endl;
-    cout << "Events written (pT>" << minPhiPt << " phi): " << successWithPhi 
+    cout << "Events written (all cuts):   " << successWithPhi 
          << " (" << 100.0*successWithPhi/max(1,iEvent) << "%)" << endl;
-    cout << "Events skipped (no phi):     " << failedToFindPhi << endl;
+    cout << "Events skipped (failed cuts): " << failedToFindPhi << endl;
     cout << "Total hadronization tries:   " << totalRetries << endl;
     cout << "Average retries per event:   " << (double)totalRetries/max(1,iEvent) << endl;
     cout << "------------------------------------------------------" << endl;

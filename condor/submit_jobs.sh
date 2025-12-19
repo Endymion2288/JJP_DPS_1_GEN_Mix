@@ -43,7 +43,7 @@ if [ "$1" == "resubmit" ]; then
     
     if [ -s "resubmit_list.txt" ]; then
         echo "Resubmitting failed jobs..."
-        condor_submit condor_submit.sub -a 'queue lhe_block from resubmit_list.txt'
+        condor_submit condor_submit.sub -a 'job_list=resubmit_list.txt'
     else
         echo "No jobs to resubmit."
     fi
@@ -55,7 +55,7 @@ elif [ -n "$1" ] && [ -n "$2" ]; then
     
     # 创建临时作业列表
     sed -n "${START},${END}p" job_list.txt > temp_job_list.txt
-    condor_submit condor_submit.sub -a 'queue lhe_block from temp_job_list.txt'
+    condor_submit condor_submit.sub -a 'job_list=temp_job_list.txt'
     rm -f temp_job_list.txt
 else
     # 提交所有作业

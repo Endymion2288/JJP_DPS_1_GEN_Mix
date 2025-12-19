@@ -64,7 +64,8 @@ echo "=========================================="
 
 # ============== 路径配置 ==============
 # 源目录（只读）
-LHE_DIR="/eos/user/x/xcheng/learn_MC/SPS-Jpsi_blocks"
+# LHE_DIR="/eos/user/x/xcheng/learn_MC/SPS-Jpsi_blocks"
+LHE_DIR="/eos/user/x/xcheng/learn_MC/ggJpsig_Jpsi_pt6_g_pt4"
 WORK_BASE="/afs/cern.ch/user/x/xcheng/condor/CMSSW_12_4_14_patch3/src/JJP_DPS_1_GEN_Mix"
 CMSSW_BASE="/afs/cern.ch/user/x/xcheng/condor/CMSSW_12_4_14_patch3"
 
@@ -184,6 +185,7 @@ if [ ! -f "${PYTHIA_SHOWER_DIR}/shower_normal" ]; then
     exit 1
 fi
 
+# 参数: input.lhe output.hepmc [nEvents] [minMuonPt] [maxMuonEta] [maxRetry]
 "${PYTHIA_SHOWER_DIR}/shower_normal" "${LHE_FILE_NORMAL}" "${HEPMC_NORMAL}"
 
 if [ ! -f "${HEPMC_NORMAL}" ]; then
@@ -204,10 +206,10 @@ if [ ! -f "${PYTHIA_SHOWER_DIR}/shower_phi" ]; then
     exit 1
 fi
 
-# 参数: input.lhe output.hepmc [nEvents] [minPhiPt] [maxRetry]
+# 参数: input.lhe output.hepmc [nEvents] [minPhiPt] [minMuonPt] [maxMuonEta] [maxRetry]
 # minPhiPt=3.0 表示phi的pT必须大于3 GeV
 # maxRetry=1000 每个事例最多重试1000次hadronization
-"${PYTHIA_SHOWER_DIR}/shower_phi" "${LHE_FILE_PHI}" "${HEPMC_PHI}" -1 3.0 1000
+"${PYTHIA_SHOWER_DIR}/shower_phi" "${LHE_FILE_PHI}" "${HEPMC_PHI}" -1 4.0 2.5 2.4 10000
 
 if [ ! -f "${HEPMC_PHI}" ]; then
     echo "ERROR: Phi shower failed to produce output"

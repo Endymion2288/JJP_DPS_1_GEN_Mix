@@ -60,4 +60,6 @@ notification = Error
 # ============== 作业队列 ==============
 # 从作业列表文件读取LHE块编号对 (normal, phi)
 # job_list.txt格式: lhe_block_normal lhe_block_phi
-queue lhe_block_normal,lhe_block_phi from job_list.txt
+# 允许通过 -a 'job_list=xxx.txt' 覆盖
+job_list = job_list.txt
+queue lhe_block_normal,lhe_block_phi from $(job_list)

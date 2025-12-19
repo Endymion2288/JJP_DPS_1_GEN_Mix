@@ -8,7 +8,8 @@
 #
 # 用法: ./generate_job_list.sh [output_file]
 
-LHE_DIR="/eos/user/x/xcheng/learn_MC/SPS-Jpsi_blocks"
+# LHE_DIR="/eos/user/x/xcheng/learn_MC/SPS-Jpsi_blocks"
+LHE_DIR="/eos/user/x/xcheng/learn_MC/ggJpsig_Jpsi_pt6_g_pt4"
 OUTPUT_FILE="${1:-job_list.txt}"
 
 echo "Generating job list from: ${LHE_DIR}"
@@ -17,18 +18,12 @@ echo ""
 echo "Strategy: Pair LHE files for normal and phi showers"
 echo "          (using different files to avoid correlation)"
 
-# 收集所有block编号到数组
-blocks=()
-for lhe_file in "${LHE_DIR}"/MC_Jpsi_block_*.lhe; do
-    if [ -f "$lhe_file" ]; then
-        basename=$(basename "$lhe_file")
-        block_num=$(echo "$basename" | sed 's/MC_Jpsi_block_\([0-9]*\)\.lhe/\1/')
-        blocks+=("$block_num")
-    fi
-done
-
-# 排序
-IFS=$'\n' sorted_blocks=($(sort <<<"${blocks[*]}")); unset IFS
+# 收集并数值排序block编号（使用find+sed比逐文件循环快）
+mapfile -t sorted_blocks < <(
+    find "${LHE_DIR}" -maxdepth 1 -name 'MC_Jpsi_block_*.lhe' -printf '%f\n' \
+    | sed -E 's/MC_Jpsi_block_([0-9]+)\.lhe/\1/' \
+    | sort -n
+)
 
 total_blocks=${#sorted_blocks[@]}
 echo "Total LHE files found: ${total_blocks}"
